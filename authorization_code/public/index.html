@@ -30,6 +30,8 @@
             </div>
             <div id="oauth">
             </div>
+            <div id="playlist">
+            </div>
             <button class="btn btn-default" id="obtain-new-token">Obtain new token using the refresh token</button>
         </div>
     </div>
@@ -52,6 +54,13 @@
           </dl>
         </div>
       </div>
+    </script>
+
+    <script id="playlist-template" type="text/x-handlebars-template">
+        <h1>Playlist Testing</h1>
+        <dl class="dl-horizontal">
+
+        </dl>
     </script>
 
     <script id="oauth-template" type="text/x-handlebars-template">
@@ -89,6 +98,10 @@
                 oauthTemplate = Handlebars.compile(oauthSource),
                 oauthPlaceholder = document.getElementById('oauth');
 
+            var playlistSource = document.getElementById('playlist-template').innerHTML,
+                playlistTemplate = Handlebars.compile(playlistSource),
+                playlistPlaceholder = document.getElementById('playlist');
+
             var params = getHashParams();
 
             var access_token = params.access_token,
@@ -117,6 +130,32 @@
                             $('#loggedin').show();
                         }
                     });
+
+                    var allSongs;
+
+                    $.ajax({
+                        url: 'https://api.spotify.com/v1/me/playlists',
+                        headers: {
+                            'Authorization': 'Bearer ' + access_token
+                        },
+                        success: function(response) {
+                            playlistPlaceholder.innerHTML = playlistTemplate(response);
+
+                            var allSongs = response.items[0];
+
+                            $.ajax({
+                                url: 'https://api.spotify.com/v1/playlists/' + allSongs.id + '/tracks',
+                                type: 'GET',
+                                headers: {
+                                    'Authorization': 'Bearer ' + access_token
+                                },
+                                success: function(response2) {
+                                    alert(response2.items[0].track.name);
+                                }
+                            });
+                        }
+                    });
+
                 } else {
                     // render initial screen
                     $('#login').show();
