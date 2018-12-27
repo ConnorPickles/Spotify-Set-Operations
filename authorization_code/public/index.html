@@ -138,12 +138,17 @@
                         headers: {
                             'Authorization': 'Bearer ' + access_token
                         },
-                        success: function(response) {
-                            playlistPlaceholder.innerHTML = playlistTemplate(response);
+                        data: {
+                            limit: '50'
+                        },
+                        success: function(playlists) {
+                            playlistPlaceholder.innerHTML = playlistTemplate(playlist);
 
                             // TODO: find playlists based on name
 
-                            var allSongs = response.items[0];
+                            // TODO: get ALL songs from a playlist
+
+                            var allSongs = playlists.items[0];
 
                             $.ajax({
                                 url: 'https://api.spotify.com/v1/playlists/' + allSongs.id + '/tracks',
@@ -151,8 +156,23 @@
                                 headers: {
                                     'Authorization': 'Bearer ' + access_token
                                 },
-                                success: function(response2) {
-                                    alert(response2.items[0].track.name);
+                                success: function(tracks1) {
+                                    alert(playlists.items.length);
+                                    alert(tracks1.items[0].track.name);
+
+                                    var track = [tracks1.items[0].track.uri, tracks1.items[0].track.uri];
+
+                                    $.ajax({
+                                        url: 'https://api.spotify.com/v1/playlists/' + allSongs.id + '/tracks',
+                                        type: 'POST',
+                                        headers: {
+                                            'Authorization': 'Bearer ' + access_token,
+                                            'Content-Type': 'application/json'
+                                        },
+                                        data: JSON.stringify({
+                                            "uris": track
+                                        })
+                                    });
                                 }
                             });
                         }
