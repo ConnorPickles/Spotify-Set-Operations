@@ -141,6 +141,8 @@
                         success: function(response) {
                             playlistPlaceholder.innerHTML = playlistTemplate(response);
 
+                            // TODO: find playlists based on name
+
                             var allSongs = response.items[0];
 
                             $.ajax({
