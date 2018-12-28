@@ -141,11 +141,17 @@
                      */
 
                     // NOTE: these are options you can change before running the program
-                    const playlist1Name = "Pringle All Songs";
-                    const playlist2Name = "Not Camp Appropriate";
-                    const setPublic = true; // while the playlist doesn't show up as private in the spotify client, other users can't view it
-                    const useExplicit = true;
-                    const operation = 'U' // I = intersect, U = union
+                    var playlist1Name = "Pringle All Songs";
+                    var playlist2Name = "Not Camp Appropriate";
+                    var setPublic = true; // while the playlist doesn't show up as private in the spotify client, other users can't view it
+                    var useExplicit = true;
+                    var operation = 'I' // I = intersect, U = union
+
+                    // selecting one of the presets overrides the above options
+                    // Acceptable: union between Pringle All Songs and Not Camp Appropriate
+                    // Pringle Power Ballads: intersect between Pringle All Songs and Power Ballads
+                    // Pringle High School Dance: intersect between Pringle All Songs and that high school dance one
+                    var preset = "Acceptable";
 
                     var playlists;
                     var playlist1;
@@ -156,6 +162,32 @@
                     var newPlaylist;
 
                     var url = "";
+
+                    // change options to match the selected preset
+                    switch (preset) {
+                        case "Acceptable":
+                            playlist1Name = "Pringle All Songs";
+                            playlist2Name = "Not Camp Appropriate";
+                            setPublic = false;
+                            useExplicit = true;
+                            operation = 'U'
+                            break;
+                        case "Pringle Power Ballads":
+                            playlist1Name = "Pringle All Songs";
+                            playlist2Name = "Power Ballads";
+                            setPublic = true;
+                            useExplicit = false;
+                            operation = 'I';
+                            break;
+                        case "Pringle High School Dance":
+                            playlist1Name = "Pringle All Songs";
+                            playlist2Name = "Songs that play at the high school dance when the male protagonist sees the girl walk in slow motion"
+                            setPublic = true;
+                            useExplicit = false;
+                            operation = 'I';
+                        default:
+                            preset = "New Playlist";
+                    }
 
                     // get all playlists
                     $.ajax({
@@ -250,7 +282,7 @@
                             'Content-Type': 'application/json'
                         },
                         data: JSON.stringify({
-                            "name": "New Playlist",
+                            "name": preset,
                             "public": setPublic,
                             "description": "This playlist contains all songs that are in both " + playlist1.name + " and " + playlist2.name + "."
                         }),
