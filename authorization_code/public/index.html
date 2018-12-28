@@ -145,12 +145,12 @@
                     var playlist2Name = "Not Camp Appropriate";
                     var setPublic = true; // while the playlist doesn't show up as private in the spotify client, other users can't view it
                     var useExplicit = true;
-                    var operation = 'I' // I = intersect, U = union
+                    var operation = 'I' // I = intersection, U = union
 
                     // selecting one of the presets overrides the above options
                     // Acceptable: union between Pringle All Songs and Not Camp Appropriate
-                    // Pringle Power Ballads: intersect between Pringle All Songs and Power Ballads
-                    // Pringle High School Dance: intersect between Pringle All Songs and that high school dance one
+                    // Pringle Power Ballads: intersection between Pringle All Songs and Power Ballads
+                    // Pringle High School Dance: intersection between Pringle All Songs and that high school dance one
                     var preset = "Acceptable";
 
                     var playlists;
@@ -263,7 +263,7 @@
                     // perform the specified operation with the tracks of each playlist
                     switch (operation) {
                         case 'I':
-                            intersect(tracks1, tracks2, newTracks, useExplicit);
+                            intersection(tracks1, tracks2, newTracks, useExplicit);
                             break;
                         case 'U':
                             union(tracks1, tracks2, newTracks, useExplicit);
@@ -314,8 +314,8 @@
 
                     alert("Playlist created!");
 
-                    // intersect playlists 1 and 2
-                    function intersect(tracks1, tracks2, newTracks, useExplicit) {
+                    // intersection playlists 1 and 2
+                    function intersection(tracks1, tracks2, newTracks, useExplicit) {
                         var shorterPlaylist = (tracks1.length < tracks2.length) ? tracks1 : tracks2;
                         var longerPlaylist = (tracks1.length >= tracks2.length) ? tracks1 : tracks2;
 
