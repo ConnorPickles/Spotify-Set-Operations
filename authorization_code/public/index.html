@@ -237,7 +237,8 @@
                             // ensure the tracks are the same
                             // handle some special cases
                             if ((shorterPlaylist[i].uri == longerPlaylist[j].uri) ||
-                                (shorterPlaylist[i].name.includes("Billionaire (feat. Bruno Mars)") && longerPlaylist[j].name.includes("Billionaire (feat. Bruno Mars)"))) {
+                                (shorterPlaylist[i].name.includes("Billionaire (feat. Bruno Mars)") && longerPlaylist[j].name.includes("Billionaire (feat. Bruno Mars)")) ||
+                                (shorterPlaylist[i].name.includes("I Love It (feat. Charli XCX)") && longerPlaylist[j].name.includes("I Love It (feat. Charli XCX)"))) {
 
                                 if (shorterPlaylist[i].explicit == longerPlaylist[j].explicit) {
                                     newTracks.push(JSON.parse(JSON.stringify(shorterPlaylist[i].uri)));
