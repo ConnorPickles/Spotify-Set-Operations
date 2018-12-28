@@ -136,22 +136,24 @@
 
                     /*
                      * THIS IS THE START OF THE PLAYLIST PROGRAM
-                     * almost everything about this was part of the example,
+                     * almost everything above this was part of the example,
                      * and I'd rather leave it there than mess with it
                      */
 
                     // NOTE: these are options you can change before running the program
-                    var playlist1Name = "Pringle All Songs";
-                    var playlist2Name = "Not Camp Appropriate";
-                    var setPublic = true; // while the playlist doesn't show up as private in the spotify client, other users can't view it
+                    var playlist1Name = "All Songs";
+                    var playlist2Name = "All Songs Copy";
+                    var setPublic = false; // while the playlist doesn't show up as private in the spotify client, other users can't view it
                     var useExplicit = true;
-                    var operation = 'I' // I = intersection, U = union
+                    var operation = 'D' // I = intersection, U = union, D = set difference
+                    var description = ""; // if left blank, an automatic description will be generated
 
                     // selecting one of the presets overrides the above options
                     // Acceptable: union between Pringle All Songs and Not Camp Appropriate
+                    // Not Acceptable: All Songs set difference Acceptable
                     // Pringle Power Ballads: intersection between Pringle All Songs and Power Ballads
                     // Pringle High School Dance: intersection between Pringle All Songs and that high school dance one
-                    var preset = "Acceptable";
+                    var preset = "";
 
                     var playlists;
                     var playlist1;
@@ -170,7 +172,14 @@
                             playlist2Name = "Not Camp Appropriate";
                             setPublic = false;
                             useExplicit = true;
-                            operation = 'U'
+                            operation = 'U';
+                            break;
+                        case "Not Acceptable":
+                            playlist1Name = "All Songs";
+                            playlist2Name = "Acceptable";
+                            setPublic = false;
+                            useExplicit = true;
+                            operation = 'U';
                             break;
                         case "Pringle Power Ballads":
                             playlist1Name = "Pringle All Songs";
@@ -268,6 +277,9 @@
                         case 'U':
                             union(tracks1, tracks2, newTracks, useExplicit);
                             break;
+                        case 'D':
+                            setDifference(tracks1, tracks2, newTracks, useExplicit);
+                            break;
                         default:
                             alert("No operation provided");
                     }
@@ -324,10 +336,7 @@
 
                                 // ensure the tracks are the same
                                 // handle some special cases
-                                if ((shorterPlaylist[i].uri == longerPlaylist[j].uri) ||
-                                    (shorterPlaylist[i].name.includes("Billionaire (feat. Bruno Mars)") && longerPlaylist[j].name.includes("Billionaire (feat. Bruno Mars)")) ||
-                                    (shorterPlaylist[i].name.includes("I Love It (feat. Charli XCX)") && longerPlaylist[j].name.includes("I Love It (feat. Charli XCX)"))) {
-
+                                if (shorterPlaylist[i].uri == longerPlaylist[j].uri || specialCases(shorterPlaylist[i], longerPlaylist[j])) {
                                     if (shorterPlaylist[i].explicit == longerPlaylist[j].explicit) {
                                         newTracks.push(JSON.parse(JSON.stringify(shorterPlaylist[i].uri)));
                                     } else {
@@ -362,9 +371,7 @@
                             for (var j = 0; j < longerPlaylist.length; j++) {
                                 if (shorterPlaylist[i].uri == longerPlaylist[j].uri) {
                                     break;
-                                } else if ((shorterPlaylist[i].name.includes("Billionaire (feat. Bruno Mars)") && longerPlaylist[j].name.includes("Billionaire (feat. Bruno Mars)")) ||
-                                    (shorterPlaylist[i].name.includes("I Love It (feat. Charli XCX)") && longerPlaylist[j].name.includes("I Love It (feat. Charli XCX)"))) {
-
+                                } else if (specialCases(shorterPlaylist[i], longerPlaylist[j])) {
                                     if (shorterPlaylist[i].explicit == longerPlaylist[j].explicit) {
                                         break;
                                     } else {
@@ -386,6 +393,30 @@
                                     newTracks.push(JSON.parse(JSON.stringify(shorterPlaylist[i].uri)));
                                 }
                             }
+                        }
+                    }
+
+                    function setDifference(base, remove, newTracks, useExplicit) {
+                        for (var i = 0; i < base.length; i++) {
+                            for (var j = 0; j < remove.length; j++) {
+                                if (base[i].uri == remove[j].uri) {
+                                    break;
+                                }
+
+                                if (j == remove.length - 1) {
+                                    newTracks.push(JSON.parse(JSON.stringify(base[i].uri)));
+                                }
+                            }
+                        }
+                    }
+
+                    function specialCases(track1, track2) {
+                        if (track1.name.includes("Billionaire (feat. Bruno Mars)") && track2.name.includes("Billionaire (feat. Bruno Mars)")) {
+                            return true;
+                        } else if (track1.name.includes("I Love It (feat. Charli XCX)") && track2.name.includes("I Love It (feat. Charli XCX)")) {
+                            return true;
+                        } else {
+                            return false;
                         }
                     }
                 } else {
