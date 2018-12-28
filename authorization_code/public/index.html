@@ -141,10 +141,17 @@
                      */
 
                     // NOTE: these are options you can change before running the program
-                    var playlist1Name = "All Songs Copy";
-                    var playlist2Name = "All Songs";
+                    var playlist1Name = "Pringle All Songs";
+                    var playlist2Name = "Not Camp Appropriate";
                     var setPublic = true; // while the playlist doesn't show up as private in the spotify client, other users can't view it
-                    var useExplicit = false;
+                    var useExplicit = true;
+                    var operation = 'I' // I = intersect, U = union
+
+                    // selecting one of the presets overrides the above options
+                    // Acceptable: union between Pringle All Songs and Not Camp Appropriate
+                    // Pringle Power Ballads: intersect between Pringle All Songs and Power Ballads
+                    // Pringle High School Dance: intersect between Pringle All Songs and that high school dance one
+                    var preset = "Acceptable";
 
                     var playlists;
                     var playlist1;
@@ -155,6 +162,32 @@
                     var newPlaylist;
 
                     var url = "";
+
+                    // change options to match the selected preset
+                    switch (preset) {
+                        case "Acceptable":
+                            playlist1Name = "Pringle All Songs";
+                            playlist2Name = "Not Camp Appropriate";
+                            setPublic = false;
+                            useExplicit = true;
+                            operation = 'U'
+                            break;
+                        case "Pringle Power Ballads":
+                            playlist1Name = "Pringle All Songs";
+                            playlist2Name = "Power Ballads";
+                            setPublic = true;
+                            useExplicit = false;
+                            operation = 'I';
+                            break;
+                        case "Pringle High School Dance":
+                            playlist1Name = "Pringle All Songs";
+                            playlist2Name = "Songs that play at the high school dance when the male protagonist sees the girl walk in slow motion"
+                            setPublic = true;
+                            useExplicit = false;
+                            operation = 'I';
+                        default:
+                            preset = "New Playlist";
+                    }
 
                     // get all playlists
                     $.ajax({
@@ -227,35 +260,16 @@
                         });
                     } while (url != null);
 
-                    // intersect playlist 1 and 2
-                    var shorterPlaylist = (tracks1.length < tracks2.length) ? tracks1 : tracks2;
-                    var longerPlaylist = (tracks1.length >= tracks2.length) ? tracks1 : tracks2;
-
-                    for (var i = 0; i < shorterPlaylist.length; i++) {
-                        for (var j = 0; j < longerPlaylist.length; j++) {
-
-                            // ensure the tracks are the same
-                            // handle some special cases
-                            if ((shorterPlaylist[i].uri == longerPlaylist[j].uri) ||
-                                (shorterPlaylist[i].name.includes("Billionaire (feat. Bruno Mars)") && longerPlaylist[j].name.includes("Billionaire (feat. Bruno Mars)")) ||
-                                (shorterPlaylist[i].name.includes("I Love It (feat. Charli XCX)") && longerPlaylist[j].name.includes("I Love It (feat. Charli XCX)"))) {
-
-                                if (shorterPlaylist[i].explicit == longerPlaylist[j].explicit) {
-                                    newTracks.push(JSON.parse(JSON.stringify(shorterPlaylist[i].uri)));
-                                } else {
-                                    var track;
-
-                                    if (useExplicit) {
-                                        track = (shorterPlaylist[i].explicit) ? shorterPlaylist[i] : longerPlaylist[j];
-                                    } else {
-                                        track = (shorterPlaylist[i].explicit) ? longerPlaylist[j] : shorterPlaylist[i];
-                                    }
-
-                                    newTracks.push(JSON.parse(JSON.stringify(track.uri)));
-                                }
-                                break;
-                            }
-                        }
+                    // perform the specified operation with the tracks of each playlist
+                    switch (operation) {
+                        case 'I':
+                            intersect(tracks1, tracks2, newTracks, useExplicit);
+                            break;
+                        case 'U':
+                            union(tracks1, tracks2, newTracks, useExplicit);
+                            break;
+                        default:
+                            alert("No operation provided");
                     }
 
                     // create new playlist
@@ -268,7 +282,7 @@
                             'Content-Type': 'application/json'
                         },
                         data: JSON.stringify({
-                            "name": "New Playlist",
+                            "name": preset,
                             "public": setPublic,
                             "description": "This playlist contains all songs that are in both " + playlist1.name + " and " + playlist2.name + "."
                         }),
@@ -291,11 +305,89 @@
                             },
                             data: JSON.stringify({
                                 "uris": tracksToAdd
-                            })
+                            }),
+                            error: function() {
+                                alert("Error adding tracks " + i + "-" + (i + 100) + ". Open developer tools and try again.");
+                            }
                         });
                     }
 
                     alert("Playlist created!");
+
+                    // intersect playlists 1 and 2
+                    function intersect(tracks1, tracks2, newTracks, useExplicit) {
+                        var shorterPlaylist = (tracks1.length < tracks2.length) ? tracks1 : tracks2;
+                        var longerPlaylist = (tracks1.length >= tracks2.length) ? tracks1 : tracks2;
+
+                        for (var i = 0; i < shorterPlaylist.length; i++) {
+                            for (var j = 0; j < longerPlaylist.length; j++) {
+
+                                // ensure the tracks are the same
+                                // handle some special cases
+                                if ((shorterPlaylist[i].uri == longerPlaylist[j].uri) ||
+                                    (shorterPlaylist[i].name.includes("Billionaire (feat. Bruno Mars)") && longerPlaylist[j].name.includes("Billionaire (feat. Bruno Mars)")) ||
+                                    (shorterPlaylist[i].name.includes("I Love It (feat. Charli XCX)") && longerPlaylist[j].name.includes("I Love It (feat. Charli XCX)"))) {
+
+                                    if (shorterPlaylist[i].explicit == longerPlaylist[j].explicit) {
+                                        newTracks.push(JSON.parse(JSON.stringify(shorterPlaylist[i].uri)));
+                                    } else {
+                                        var track;
+
+                                        if (useExplicit) {
+                                            track = (shorterPlaylist[i].explicit) ? shorterPlaylist[i] : longerPlaylist[j];
+                                        } else {
+                                            track = (shorterPlaylist[i].explicit) ? longerPlaylist[j] : shorterPlaylist[i];
+                                        }
+
+                                        newTracks.push(JSON.parse(JSON.stringify(track.uri)));
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // unions playlists 1 and 2
+                    function union(tracks1, tracks2, newTracks, useExplicit) {
+                        var shorterPlaylist = (tracks1.length < tracks2.length) ? tracks1 : tracks2;
+                        var longerPlaylist = (tracks1.length >= tracks2.length) ? tracks1 : tracks2;
+
+                        // add all songs from the longer playlist
+                        for (var i = 0; i < longerPlaylist.length; i++) {
+                            newTracks.push(JSON.parse(JSON.stringify(longerPlaylist[i].uri)));
+                        }
+
+                        // add all songs from the shorter playlist that weren't already added
+                        for (var i = 0; i < shorterPlaylist.length; i++) {
+                            for (var j = 0; j < longerPlaylist.length; j++) {
+                                if (shorterPlaylist[i].uri == longerPlaylist[j].uri) {
+                                    break;
+                                } else if ((shorterPlaylist[i].name.includes("Billionaire (feat. Bruno Mars)") && longerPlaylist[j].name.includes("Billionaire (feat. Bruno Mars)")) ||
+                                    (shorterPlaylist[i].name.includes("I Love It (feat. Charli XCX)") && longerPlaylist[j].name.includes("I Love It (feat. Charli XCX)"))) {
+
+                                    if (shorterPlaylist[i].explicit == longerPlaylist[j].explicit) {
+                                        break;
+                                    } else {
+                                        var track;
+
+                                        if (useExplicit) {
+                                            track = (shorterPlaylist[i].explicit) ? shorterPlaylist[i] : longerPlaylist[j];
+                                        } else {
+                                            track = (shorterPlaylist[i].explicit) ? longerPlaylist[j] : shorterPlaylist[i];
+                                        }
+
+                                        newTracks[j] = JSON.parse(JSON.stringify(track.uri));
+
+                                        break;
+                                    }
+                                }
+
+                                if (j == longerPlaylist.length - 1) {
+                                    newTracks.push(JSON.parse(JSON.stringify(shorterPlaylist[i].uri)));
+                                }
+                            }
+                        }
+                    }
                 } else {
                     // render initial screen
                     $('#login').show();
