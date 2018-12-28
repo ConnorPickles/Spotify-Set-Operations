@@ -118,66 +118,183 @@
                         refresh_token: refresh_token
                     });
 
+                    var me;
+
                     $.ajax({
                         url: 'https://api.spotify.com/v1/me',
+                        async: false,
                         headers: {
                             'Authorization': 'Bearer ' + access_token
                         },
                         success: function(response) {
                             userProfilePlaceholder.innerHTML = userProfileTemplate(response);
-
+                            me = JSON.parse(JSON.stringify(response));
                             $('#login').hide();
                             $('#loggedin').show();
                         }
                     });
 
-                    var allSongs;
+                    /*
+                     * THIS IS THE START OF THE PLAYLIST PROGRAM
+                     * almost everything about this was part of the example,
+                     * and I'd rather leave it there than mess with it
+                     */
 
+                    // NOTE: these are options you can change before running the program
+                    var playlist1Name = "All Songs Copy";
+                    var playlist2Name = "All Songs";
+                    var setPublic = true; // while the playlist doesn't show up as private in the spotify client, other users can't view it
+                    var useExplicit = false;
+
+                    var playlists;
+                    var playlist1;
+                    var playlist2;
+                    var tracks1 = [];
+                    var tracks2 = [];
+                    var newTracks = [];
+                    var newPlaylist;
+
+                    var url = "";
+
+                    // get all playlists
                     $.ajax({
                         url: 'https://api.spotify.com/v1/me/playlists',
+                        async: false,
                         headers: {
                             'Authorization': 'Bearer ' + access_token
                         },
                         data: {
                             limit: '50'
                         },
-                        success: function(playlists) {
-                            playlistPlaceholder.innerHTML = playlistTemplate(playlist);
-
-                            // TODO: find playlists based on name
-
-                            // TODO: get ALL songs from a playlist
-
-                            var allSongs = playlists.items[0];
-
-                            $.ajax({
-                                url: 'https://api.spotify.com/v1/playlists/' + allSongs.id + '/tracks',
-                                type: 'GET',
-                                headers: {
-                                    'Authorization': 'Bearer ' + access_token
-                                },
-                                success: function(tracks1) {
-                                    alert(playlists.items.length);
-                                    alert(tracks1.items[0].track.name);
-
-                                    var track = [tracks1.items[0].track.uri, tracks1.items[0].track.uri];
-
-                                    $.ajax({
-                                        url: 'https://api.spotify.com/v1/playlists/' + allSongs.id + '/tracks',
-                                        type: 'POST',
-                                        headers: {
-                                            'Authorization': 'Bearer ' + access_token,
-                                            'Content-Type': 'application/json'
-                                        },
-                                        data: JSON.stringify({
-                                            "uris": track
-                                        })
-                                    });
-                                }
-                            });
+                        success: function(response) {
+                            playlistPlaceholder.innerHTML = playlistTemplate(playlists);
+                            playlists = response;
                         }
                     });
 
+                    // locate playlist 1 and 2
+                    for (var i = 0; i < playlists.items.length; i++) {
+                        if (playlists.items[i].name == playlist1Name) {
+                            playlist1 = JSON.parse(JSON.stringify(playlists.items[i]));
+                            if (playlist2 != null) {
+                                break;
+                            }
+                        } else if (playlists.items[i].name == playlist2Name) {
+                            playlist2 = JSON.parse(JSON.stringify(playlists.items[i]));
+                            if (playlist1 != null) {
+                                break;
+                            }
+                        }
+                    }
+
+                    // get all tracks in playlist 1
+                    url = 'https://api.spotify.com/v1/playlists/' + playlist1.id + '/tracks';
+
+                    do {
+                        $.ajax({
+                            url: url,
+                            type: 'GET',
+                            async: false,
+                            headers: {
+                                'Authorization': 'Bearer ' + access_token
+                            },
+                            success: function(response) {
+                                for (var i = 0; i < response.items.length; i++) {
+                                    tracks1.push(JSON.parse(JSON.stringify(response.items[i].track)));
+                                }
+                                url = response.next;
+                            }
+                        });
+                    } while (url != null);
+
+                    // get all tracks in playlist 2
+                    url = 'https://api.spotify.com/v1/playlists/' + playlist2.id + '/tracks';
+
+                    do {
+                        $.ajax({
+                            url: url,
+                            type: 'GET',
+                            async: false,
+                            headers: {
+                                'Authorization': 'Bearer ' + access_token
+                            },
+                            success: function(response) {
+                                for (var i = 0; i < response.items.length; i++) {
+                                    tracks2.push(JSON.parse(JSON.stringify(response.items[i].track)));
+                                }
+                                url = response.next;
+                            }
+                        });
+                    } while (url != null);
+
+                    // intersect playlist 1 and 2
+                    var shorterPlaylist = (tracks1.length < tracks2.length) ? tracks1 : tracks2;
+                    var longerPlaylist = (tracks1.length >= tracks2.length) ? tracks1 : tracks2;
+
+                    for (var i = 0; i < shorterPlaylist.length; i++) {
+                        for (var j = 0; j < longerPlaylist.length; j++) {
+
+                            // ensure the tracks are the same
+                            // handle some special cases
+                            if ((shorterPlaylist[i].uri == longerPlaylist[j].uri) ||
+                                (shorterPlaylist[i].name.includes("Billionaire (feat. Bruno Mars)") && longerPlaylist[j].name.includes("Billionaire (feat. Bruno Mars)"))) {
+
+                                if (shorterPlaylist[i].explicit == longerPlaylist[j].explicit) {
+                                    newTracks.push(JSON.parse(JSON.stringify(shorterPlaylist[i].uri)));
+                                } else {
+                                    var track;
+
+                                    if (useExplicit) {
+                                        track = (shorterPlaylist[i].explicit) ? shorterPlaylist[i] : longerPlaylist[j];
+                                    } else {
+                                        track = (shorterPlaylist[i].explicit) ? longerPlaylist[j] : shorterPlaylist[i];
+                                    }
+
+                                    newTracks.push(JSON.parse(JSON.stringify(track.uri)));
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    // create new playlist
+                    $.ajax({
+                        url: 'https://api.spotify.com/v1/users/' + me.id + '/playlists',
+                        type: 'POST',
+                        async: false,
+                        headers: {
+                            'Authorization': 'Bearer ' + access_token,
+                            'Content-Type': 'application/json'
+                        },
+                        data: JSON.stringify({
+                            "name": "New Playlist",
+                            "public": setPublic,
+                            "description": "This playlist contains all songs that are in both " + playlist1.name + " and " + playlist2.name + "."
+                        }),
+                        success: function(response) {
+                            newPlaylist = JSON.parse(JSON.stringify(response));
+                        }
+                    });
+
+                    // add tracks to the new playlist
+                    for (var i = 0; i < newTracks.length; i += 100) {
+                        var tracksToAdd = newTracks.slice(i, i + 100);
+
+                        $.ajax({
+                            url: 'https://api.spotify.com/v1/playlists/' + newPlaylist.id + '/tracks',
+                            type: 'POST',
+                            async: false,
+                            headers: {
+                                'Authorization': 'Bearer ' + access_token,
+                                'Content-Type': 'application/json'
+                            },
+                            data: JSON.stringify({
+                                "uris": tracksToAdd
+                            })
+                        });
+                    }
+
+                    alert("Playlist created!");
                 } else {
                     // render initial screen
                     $('#login').show();
