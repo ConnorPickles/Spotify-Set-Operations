@@ -153,7 +153,7 @@
                     // Not Acceptable: All Songs set difference Acceptable
                     // Pringle Power Ballads: intersection between Pringle All Songs and Power Ballads
                     // Pringle High School Dance: intersection between Pringle All Songs and that high school dance one
-                    var preset = "";
+                    var preset = "Not Acceptable";
 
                     var playlists;
                     var playlist1;
@@ -173,13 +173,15 @@
                             setPublic = false;
                             useExplicit = true;
                             operation = 'U';
+                            description = "All the songs that I think other people would want to listen to";
                             break;
                         case "Not Acceptable":
                             playlist1Name = "All Songs";
                             playlist2Name = "Acceptable";
                             setPublic = false;
                             useExplicit = true;
-                            operation = 'U';
+                            operation = 'D';
+                            description = "All the songs I don't think other people would want to listen to";
                             break;
                         case "Pringle Power Ballads":
                             playlist1Name = "Pringle All Songs";
@@ -187,13 +189,15 @@
                             setPublic = true;
                             useExplicit = false;
                             operation = 'I';
+                            description = "Camp appropriate power ballads";
                             break;
                         case "Pringle High School Dance":
                             playlist1Name = "Pringle All Songs";
-                            playlist2Name = "Songs that play at the high school dance when the male protagonist sees the girl walk in slow motion"
+                            playlist2Name = "Songs that play at the high school dance when the male protagonist sees the girl walk in slow motion";
                             setPublic = true;
                             useExplicit = false;
                             operation = 'I';
+                            description: "Camp appropriate version of \"Songs that play at the high school dance when the male protagonist sees the girl walk in slow motion\"";
                         default:
                             preset = "New Playlist";
                     }
@@ -284,6 +288,25 @@
                             alert("No operation provided");
                     }
 
+                    // generate default description if necessary
+                    if (description == "") {
+                        description = "This playlist contains all songs that ";
+
+                        switch (operation) {
+                            case 'I':
+                                description += "are in both " + playlist1.name + " and " + playlist2.name;
+                                break;
+                            case 'U':
+                                description += "are in either " + playlist1.name + " or " + playlist2.name;
+                                break;
+                            case 'D':
+                                description += "are in " + playlist1.name + ", excluding songs that are also in " + playlist2.name;
+                                break;
+                            default:
+                                description = "No operation was provided";
+                        }
+                    }
+
                     // create new playlist
                     $.ajax({
                         url: 'https://api.spotify.com/v1/users/' + me.id + '/playlists',
@@ -296,7 +319,7 @@
                         data: JSON.stringify({
                             "name": preset,
                             "public": setPublic,
-                            "description": "This playlist contains all songs that are in both " + playlist1.name + " and " + playlist2.name + "."
+                            "description": description
                         }),
                         success: function(response) {
                             newPlaylist = JSON.parse(JSON.stringify(response));
