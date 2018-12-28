@@ -227,36 +227,7 @@
                         });
                     } while (url != null);
 
-                    // intersect playlist 1 and 2
-                    var shorterPlaylist = (tracks1.length < tracks2.length) ? tracks1 : tracks2;
-                    var longerPlaylist = (tracks1.length >= tracks2.length) ? tracks1 : tracks2;
-
-                    for (var i = 0; i < shorterPlaylist.length; i++) {
-                        for (var j = 0; j < longerPlaylist.length; j++) {
-
-                            // ensure the tracks are the same
-                            // handle some special cases
-                            if ((shorterPlaylist[i].uri == longerPlaylist[j].uri) ||
-                                (shorterPlaylist[i].name.includes("Billionaire (feat. Bruno Mars)") && longerPlaylist[j].name.includes("Billionaire (feat. Bruno Mars)")) ||
-                                (shorterPlaylist[i].name.includes("I Love It (feat. Charli XCX)") && longerPlaylist[j].name.includes("I Love It (feat. Charli XCX)"))) {
-
-                                if (shorterPlaylist[i].explicit == longerPlaylist[j].explicit) {
-                                    newTracks.push(JSON.parse(JSON.stringify(shorterPlaylist[i].uri)));
-                                } else {
-                                    var track;
-
-                                    if (useExplicit) {
-                                        track = (shorterPlaylist[i].explicit) ? shorterPlaylist[i] : longerPlaylist[j];
-                                    } else {
-                                        track = (shorterPlaylist[i].explicit) ? longerPlaylist[j] : shorterPlaylist[i];
-                                    }
-
-                                    newTracks.push(JSON.parse(JSON.stringify(track.uri)));
-                                }
-                                break;
-                            }
-                        }
-                    }
+                    intersect(tracks1, tracks2, newTracks);
 
                     // create new playlist
                     $.ajax({
@@ -296,6 +267,39 @@
                     }
 
                     alert("Playlist created!");
+
+                    // intersect playlists 1 and 2
+                    function intersect(tracks1, tracks2, newTracks) {
+                        var shorterPlaylist = (tracks1.length < tracks2.length) ? tracks1 : tracks2;
+                        var longerPlaylist = (tracks1.length >= tracks2.length) ? tracks1 : tracks2;
+
+                        for (var i = 0; i < shorterPlaylist.length; i++) {
+                            for (var j = 0; j < longerPlaylist.length; j++) {
+
+                                // ensure the tracks are the same
+                                // handle some special cases
+                                if ((shorterPlaylist[i].uri == longerPlaylist[j].uri) ||
+                                    (shorterPlaylist[i].name.includes("Billionaire (feat. Bruno Mars)") && longerPlaylist[j].name.includes("Billionaire (feat. Bruno Mars)")) ||
+                                    (shorterPlaylist[i].name.includes("I Love It (feat. Charli XCX)") && longerPlaylist[j].name.includes("I Love It (feat. Charli XCX)"))) {
+
+                                    if (shorterPlaylist[i].explicit == longerPlaylist[j].explicit) {
+                                        newTracks.push(JSON.parse(JSON.stringify(shorterPlaylist[i].uri)));
+                                    } else {
+                                        var track;
+
+                                        if (useExplicit) {
+                                            track = (shorterPlaylist[i].explicit) ? shorterPlaylist[i] : longerPlaylist[j];
+                                        } else {
+                                            track = (shorterPlaylist[i].explicit) ? longerPlaylist[j] : shorterPlaylist[i];
+                                        }
+
+                                        newTracks.push(JSON.parse(JSON.stringify(track.uri)));
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 } else {
                     // render initial screen
                     $('#login').show();
