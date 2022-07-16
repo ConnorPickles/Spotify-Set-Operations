@@ -141,13 +141,13 @@
                      */
 
                     // NOTE: these are options you can change before running the program
-                    var playlist1Name = "Energetic"; // When using "Pringle" option, change this one
-                    var playlist2Name = "Energetic"; 
+                    var playlist1Name = "Not Appropriate Energetic OG"; // When using "Pringle" option, change this one
+                    var playlist2Name = "Not Appropriate Energetic"; 
                     var setPublic = true; // while the playlist doesn't show up as private in the spotify client, other users can't view it
-                    var useExplicit = false;
-                    var operation = 'I' // I = intersection, U = union, D = set difference
+                    var useExplicit = true;
+                    var operation = 'D' // I = intersection, U = union, D = set difference
                     var description = ""; // if left blank, an automatic description will be generated
-                    var image = ""; // blank = default. thumbs up, thumbs down, power ballad, high school dance
+                    var image = ""; // blank = default. thumbs up, thumbs down, power ballad, high school dance, satanic
 
                     // selecting one of the presets overrides the above options
                     // Acceptable: union between Pringle All Songs and Not Camp Appropriate
@@ -156,7 +156,14 @@
                     // Pringle: Automatically gets a camp appropriate version of playlist1Name
                     // Pringle Power Ballads: intersection between Pringle All Songs and Power Ballads
                     // Pringle High School Dance: intersection between Pringle All Songs and that high school dance one
-                    var preset = "Not Appropriate Energetic";
+                    // Pringle BASS-ic: intersection between Pringle All Songs and BASS-ic
+                    // Spotify Only: set difference between All Songs and iTunes
+                    
+                    // Preset with pre reqs and the order they should be run in:
+                    // Acceptable -> Not Acceptable
+                    // Pringle Energetic -> Not Appropriate Energetic
+                    
+                    var preset = "Pringle BASS-ic";
 
                     var playlists;
                     var playlist1;
@@ -170,6 +177,14 @@
 
                     // change options to match the selected preset
                     switch (preset) {
+                        case "Spotify Only":
+                            playlist1Name = "All Songs";
+                            playlist2Name = "iTunes";
+                            setPublic = false;
+                            useExplicit = true;
+                            operation = 'U';
+                            description = "Songs that I already own on iTunes";
+                            break;
                         case "Acceptable":
                             playlist1Name = "Pringle All Songs";
                             playlist2Name = "Not Camp Appropriate";
@@ -194,7 +209,7 @@
                             setPublic = false;
                             useExplicit = true;
                             operation = 'D';
-                            description = 'All songs from \"Energetic\" that arn\'t camp appropriate';
+                            description = 'All songs from \"Energetic\" that aren\'t camp appropriate';
                             break;
                         case "Pringle":
                             playlist2Name = "Pringle All Songs";
@@ -229,6 +244,15 @@
                             operation = 'I';
                             description = "Camp appropriate version of \"Songs that play at the high school dance when the male protagonist sees the girl walk in slow motion\"";
                             image = "high school dance"
+                            break;
+                        case "Pringle BASS-ic":
+                            playlist1Name = "Pringle All Songs";
+                            playlist2Name = "BASS-ic"
+                            setPublic = true;
+                            useExplicit = false;
+                            operation = 'I';
+                            description = "Camp appropriate version of \"BASS-ic\""
+                            break;
                         default:
                             preset = "New Playlist";
                     }
